@@ -2,6 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { execSync } from 'child_process';
+import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   //execSync('npx prisma migrate deploy', { stdio: 'inherit' });
@@ -16,6 +17,7 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document); // http://localhost:3000/api-docs 에서 확인 가능
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   await app.listen(3000);
 }
 bootstrap();
