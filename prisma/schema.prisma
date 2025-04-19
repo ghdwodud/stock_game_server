@@ -1,0 +1,66 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           Int      @id @default(autoincrement())
+  name         String
+  email        String   @unique
+  passwordHash String
+  balance      Float    @default(10000000)
+  level        Int      @default(1)
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  transactions Transaction[]
+  wallet       Wallet?
+
+  userStocks UserStock[]
+}
+
+model Stock {
+  id        Int      @id @default(autoincrement())
+  symbol    String   @unique
+  name      String
+  price     Float
+  createdAt DateTime @default(now())
+
+  transactions Transaction[]
+}
+
+model UserStock {
+  id        Int    @id @default(autoincrement())
+  userId    Int
+  stockCode String
+  quantity  Int
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  stockId   Int
+  type      String // "buy" or "sell"
+  quantity  Int
+  price     Float
+  createdAt DateTime @default(now())
+
+  user  User  @relation(fields: [userId], references: [id])
+  stock Stock @relation(fields: [stockId], references: [id])
+}
+
+model Wallet {
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  totalAsset Float    @default(0)
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}

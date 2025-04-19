@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { execSync } from 'child_process';
 
 async function bootstrap() {
+  //execSync('npx prisma migrate deploy', { stdio: 'inherit' });
   const app = await NestFactory.create(AppModule);
 
   const config = new DocumentBuilder()
@@ -14,7 +16,6 @@ async function bootstrap() {
 
   const document = SwaggerModule.createDocument(app, config);
   SwaggerModule.setup('api-docs', app, document); // http://localhost:3000/api-docs 에서 확인 가능
-
   await app.listen(3000);
 }
 bootstrap();

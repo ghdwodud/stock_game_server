@@ -1,0 +1,34 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: Deploy NestJS to EC2
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Copy project to EC2 and run deploy
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: 18.223.196.112
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            cd ~/stockgame-server || git clone https://github.com/yourusername/your-repo.git stockgame-server && cd stockgame-server
+            git pull origin main
+            npm install
+            npm run build
+            npx prisma migrate deploy
+            pm2 restart stockgame-server || pm2 start dist/main.js --name stockgame-server
