@@ -1,6 +1,7 @@
 import { Injectable, ConflictException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
+import { LoginDto } from './auth.dto';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,6 @@ export class AuthService {
         name: body.name,
         email: body.email,
         passwordHash: hashed,
-        
       },
     });
 
@@ -31,5 +31,8 @@ export class AuthService {
       name: user.name,
       email: user.email,
     };
+  }
+  async login(body: LoginDto) {
+    return { message: `로그인 시도: ${body.email}` };
   }
 }

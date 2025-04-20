@@ -15,3 +15,9 @@ export class SignupDto {
   @MinLength(6)
   password: string;
 }
+
+export class LoginDto {
+  email: string;
+  password: string;
+}
+  
