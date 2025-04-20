@@ -1,37 +1,54 @@
-name: Deploy to EC2
-
-# on:
-#   push:
-#     branches:
-#       - master
+name: Deploy to S3
 
 on:
   workflow_dispatch:
 
 jobs:
-  deploy:
-    name: Deploy NestJS to EC2
+  build-and-upload:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Install Node.js
-        uses: actions/setup-node@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: 18  # 필요시 20으로 올려도 됨
 
-      - name: Copy project to EC2 and run deploy
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: 18.223.196.112
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-          script: |
-            cd ~/stockgame-server || git clone https://github.com/yourusername/your-repo.git stockgame-server && cd stockgame-server
-            git pull origin main
-            npm install
-            npm run build
-            npx prisma migrate deploy
-            pm2 restart stockgame-server || pm2 start dist/main.js --name stockgame-server
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build project
+        run: npm run build
+
+      - name: Print current working directory
+        run: pwd
+
+      - name: List project root files
+        run: ls -al
+
+      - name: Archive build output
+        run: |
+          rm -rf output
+          mkdir output
+          cp -r dist prisma package.json tsconfig.json tsconfig.build.json output/
+          cd output
+          tar -czf ../build.tar.gz .
+
+      - name: Check archive contents
+        run: |
+          echo "✅ Archive includes:"
+          tar -tzf build.tar.gz | head -n 50
+          echo "✅ Checking for tsconfig:"
+          tar -tzf build.tar.gz | grep tsconfig || echo "❌ tsconfig.json not found!"
+          echo "✅ Checking for node_modules:"
+          tar -tzf build.tar.gz | grep node_modules || echo "✅ No node_modules found!"
+
+      - name: Upload build.tar.gz to S3
+        run: aws s3 cp build.tar.gz s3://$S3_BUCKET/build.tar.gz --region $AWS_REGION
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+          S3_BUCKET: ${{ secrets.S3_BUCKET }}
