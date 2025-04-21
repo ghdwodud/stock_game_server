@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config'; // ✅ 이거 추가
-import { DashboardController } from './dashboard/dashboard.controller';
-import { DashBoardService } from './dashboard/dashboard.service';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { StocksModule } from './stocks/stocks.module';
+import { HoldingsModule } from './holdings/holdings.module';
+import { TradesModule } from './trades/trades.module';
+import { RewardsModule } from './rewards/rewards.module';
 
 @Module({
   imports: [
@@ -14,8 +16,12 @@ import { AuthModule } from './auth/auth.module';
     PrismaModule,
     UserModule,
     AuthModule,
+    StocksModule,
+    HoldingsModule,
+    TradesModule,
+    RewardsModule,
   ],
-  controllers: [DashboardController],
-  providers: [DashBoardService],
+  controllers: [],
+  providers: [],
 })
 export class AppModule {}
