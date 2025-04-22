@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreateStockDto } from './dto/create-stock.dto';
 import { UpdateStockDto } from './dto/update-stock.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class StocksService {
+  constructor(private readonly prisma: PrismaService) {}
   private stocks = [
     { symbol: 'AAPL', name: '애플', price: 190.25, changeRate: 0 },
     { symbol: 'TSLA', name: '테슬라', price: 720.0, changeRate: 0 },
@@ -14,9 +16,10 @@ export class StocksService {
     return 'This action adds a new stock';
   }
 
-
-  findAll() {
-    return this.stocks;
+  async findAll() {
+    return this.prisma.stock.findMany({
+      orderBy: { symbol: 'asc' },
+    });
   }
 
   updateAllPrices(): void {

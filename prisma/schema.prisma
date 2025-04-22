@@ -9,7 +9,7 @@ datasource db {
 
 model User {
   id           Int      @id @default(autoincrement())
-  userUuid     String?  @default(uuid()) @unique 
+  uuid         String?  @default(uuid()) @unique 
   name         String
   email        String   @unique
   passwordHash String
@@ -19,41 +19,28 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  transactions Transaction[]
   wallet       Wallet?
-
-  userStocks UserStock[]
 }
 
 model Stock {
-  id        Int      @id @default(autoincrement())
-  symbol    String   @unique
-  name      String
-  price     Float
-  createdAt DateTime @default(now())
+  id          Int              @id @default(autoincrement())
+  symbol      String           @unique
+  name        String
+  price       Float
+  prevPrice   Float?
+  changeRate  Float?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
 
-  transactions Transaction[]
+  histories   StockHistory[]
 }
 
-model UserStock {
-  id        Int    @id @default(autoincrement())
-  userId    Int
-  stockCode String
-  quantity  Int
-
-  user User @relation(fields: [userId], references: [id])
-}
-
-model Transaction {
+model StockHistory {
   id        Int      @id @default(autoincrement())
-  userId    Int
   stockId   Int
-  type      String // "buy" or "sell"
-  quantity  Int
   price     Float
-  createdAt DateTime @default(now())
+  timestamp DateTime @default(now())
 
-  user  User  @relation(fields: [userId], references: [id])
   stock Stock @relation(fields: [stockId], references: [id])
 }
 

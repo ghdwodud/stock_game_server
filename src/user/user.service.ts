@@ -6,7 +6,6 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  
   async createUser(data: { name: string; email: string }) {
     return this.prisma.user.create({
       data: {
@@ -40,35 +39,35 @@ export class UserService {
     });
   }
 
-  async addStock(userId: number, stockCode: string, quantity: number) {
-    const existing = await this.prisma.userStock.findFirst({
-      where: { userId, stockCode },
-    });
+  // async addStock(userId: number, stockCode: string, quantity: number) {
+  //   const existing = await this.prisma.userStock.findFirst({
+  //     where: { userId, stockCode },
+  //   });
 
-    if (existing) {
-      return this.prisma.userStock.update({
-        where: { id: existing.id },
-        data: { quantity: existing.quantity + quantity },
-      });
-    } else {
-      return this.prisma.userStock.create({
-        data: { userId, stockCode, quantity },
-      });
-    }
-  }
+  //   if (existing) {
+  //     return this.prisma.userStock.update({
+  //       where: { id: existing.id },
+  //       data: { quantity: existing.quantity + quantity },
+  //     });
+  //   } else {
+  //     return this.prisma.userStock.create({
+  //       data: { userId, stockCode, quantity },
+  //     });
+  //   }
+  // }
 
-  async subtractStock(userId: number, stockCode: string, quantity: number) {
-    const existing = await this.prisma.userStock.findFirst({
-      where: { userId, stockCode },
-    });
+  // async subtractStock(userId: number, stockCode: string, quantity: number) {
+  //   const existing = await this.prisma.userStock.findFirst({
+  //     where: { userId, stockCode },
+  //   });
 
-    if (!existing || existing.quantity < quantity) {
-      throw new Error('Not enough stock to subtract');
-    }
+  //   if (!existing || existing.quantity < quantity) {
+  //     throw new Error('Not enough stock to subtract');
+  //   }
 
-    return this.prisma.userStock.update({
-      where: { id: existing.id },
-      data: { quantity: existing.quantity - quantity },
-    });
-  }
+  //   return this.prisma.userStock.update({
+  //     where: { id: existing.id },
+  //     data: { quantity: existing.quantity - quantity },
+  //   });
+  // }
 }

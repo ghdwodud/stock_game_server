@@ -27,7 +27,7 @@ export class AuthService {
     });
 
     return {
-      userUuid: user.userUuid,
+      userUuid: user.uuid,
       name: user.name,
       email: user.email,
     };

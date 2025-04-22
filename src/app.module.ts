@@ -7,6 +7,8 @@ import { StocksModule } from './stocks/stocks.module';
 import { HoldingsModule } from './holdings/holdings.module';
 import { TradesModule } from './trades/trades.module';
 import { RewardsModule } from './rewards/rewards.module';
+import { StockModule } from './stock/stock.module';
+import { StockHistoryModule } from './stock-history/stock-history.module';
 
 @Module({
   imports: [
@@ -20,6 +22,8 @@ import { RewardsModule } from './rewards/rewards.module';
     HoldingsModule,
     TradesModule,
     RewardsModule,
+    StockModule,
+    StockHistoryModule,
   ],
   controllers: [],
   providers: [],
