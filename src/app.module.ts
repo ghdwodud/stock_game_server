@@ -7,14 +7,15 @@ import { StocksModule } from './stocks/stocks.module';
 import { HoldingsModule } from './holdings/holdings.module';
 import { TradesModule } from './trades/trades.module';
 import { RewardsModule } from './rewards/rewards.module';
-import { StockModule } from './stock/stock.module';
 import { StockHistoryModule } from './stock-history/stock-history.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true, // ✅ 전역으로 환경변수 등록
     }),
+
     PrismaModule,
     UserModule,
     AuthModule,
@@ -22,8 +23,8 @@ import { StockHistoryModule } from './stock-history/stock-history.module';
     HoldingsModule,
     TradesModule,
     RewardsModule,
-    StockModule,
     StockHistoryModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [],
