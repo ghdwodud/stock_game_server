@@ -22,14 +22,16 @@ export class StockHistoryService {
       where: { id },
     });
   }
-
   async findByStockId(stockId: number) {
-    return this.prisma.stockHistory.findMany({
+    const recent = await this.prisma.stockHistory.findMany({
       where: { stockId },
-      orderBy: { timestamp: 'asc' }, // 또는 'desc'로 바꿔도 됨
-      take: 30, // 최근 30개만 조회 (필요 시 조절 가능)
+      orderBy: { timestamp: 'desc' }, // 최신부터 가져오기
+      take: 30,
     });
+
+    return recent.reverse();
   }
+  
 
   async update(id: number, updateStockHistoryDto: UpdateStockHistoryDto) {
     return this.prisma.stockHistory.update({

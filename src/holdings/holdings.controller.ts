@@ -22,6 +22,11 @@ export class HoldingsController {
     return this.holdingsService.findOne(+id);
   }
 
+  @Get(':userId')
+  getUserHoldings(@Param('userId') userId: string) {
+    return this.holdingsService.findByUserId(Number(userId));
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateHoldingDto: UpdateHoldingDto) {
     return this.holdingsService.update(+id, updateHoldingDto);

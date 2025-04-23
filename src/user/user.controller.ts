@@ -8,6 +8,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 import { UserService } from './user.service';
+import { CreateUserDto } from 'src/stock-history/dto/create-user.dto';
 
 @ApiTags('users') // ✅ Swagger 그룹명
 @Controller('users')
@@ -26,8 +27,8 @@ export class UserController {
       required: ['name', 'email'],
     },
   })
-  async createUser(@Body() data: { name: string; email: string }) {
-    return this.userService.createUser(data);
+  createUser(@Body() dto: CreateUserDto) {
+    return this.userService.createUser(dto);
   }
 
   @Get(':id')
@@ -35,6 +36,12 @@ export class UserController {
   @ApiParam({ name: 'id', type: Number })
   async getUser(@Param('id') id: string) {
     return this.userService.findById(Number(id));
+  }
+
+  // user.controller.ts
+  @Get(':userId/portfolio')
+  getPortfolio(@Param('userId') userId: string) {
+    return this.userService.getPortfolio(Number(userId));
   }
 
   @Patch(':id/cash')

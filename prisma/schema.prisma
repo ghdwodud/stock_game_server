@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "./node_modules/.prisma/client" // 기본 위치
 }
 
 datasource db {
@@ -20,6 +21,7 @@ model User {
   updatedAt    DateTime @updatedAt
 
   wallet       Wallet?
+  holdings     Holding[]
 }
 
 model Stock {
@@ -33,6 +35,7 @@ model Stock {
   updatedAt   DateTime         @updatedAt
 
   histories   StockHistory[]
+  holdings     Holding[]
 }
 
 model StockHistory {
@@ -52,3 +55,13 @@ model Wallet {
 
   user User @relation(fields: [userId], references: [id])
 }
+
+model Holding {
+  id       Int    @id @default(autoincrement())
+  userId   Int
+  stockId  Int
+  quantity Int
+  user     User   @relation(fields: [userId], references: [id])
+  stock    Stock  @relation(fields: [stockId], references: [id])
+}
+

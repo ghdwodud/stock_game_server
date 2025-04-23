@@ -1,21 +1,39 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-
-
+import * as bcrypt from 'bcrypt';
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async createUser(data: { name: string; email: string }) {
-    return this.prisma.user.create({
+  async createUser(data: { name: string; email: string; password: string }) {
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
+    const user = await this.prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
-        passwordHash: 'hashed_password', // 실제로는 bcrypt 처리 필요
+        passwordHash: hashedPassword,
+        wallet: {
+          create: {
+            totalAsset: 10_000_000, // 최초 자산
+          },
+        },
+      },
+      include: {
+        wallet: true,
       },
     });
-  }
 
+    if (!user.wallet) throw new Error('지갑 정보가 없습니다.');
+
+    return {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      balance: user.balance,
+      totalAsset: user.wallet.totalAsset,
+    };
+  }
   async findById(id: number) {
     return this.prisma.user.findUnique({
       where: { id },
@@ -37,6 +55,33 @@ export class UserService {
       where: { id },
       data: { balance: user.balance + amount },
     });
+  }
+
+  async getPortfolio(userId: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      include: {
+        wallet: true,
+      },
+    });
+
+    if (!user || !user.wallet) {
+      throw new NotFoundException('유저 또는 지갑 정보 없음');
+    }
+
+    const totalAsset = user.wallet.totalAsset;
+    const cash = user.balance;
+    const stockValue = totalAsset - cash;
+    const initialAsset = 10_000_000; // 기본 시작 금액
+    const profitRate = (totalAsset - initialAsset) / initialAsset;
+
+    return {
+      nickname: user.name,
+      cash,
+      stockValue,
+      totalAsset,
+      profitRate,
+    };
   }
 
   // async addStock(userId: number, stockCode: string, quantity: number) {

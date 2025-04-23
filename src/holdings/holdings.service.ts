@@ -1,9 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { CreateHoldingDto } from './dto/create-holding.dto';
 import { UpdateHoldingDto } from './dto/update-holding.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class HoldingsService {
+  constructor(private readonly prisma: PrismaService) {}
   create(createHoldingDto: CreateHoldingDto) {
     return 'This action adds a new holding';
   }
@@ -22,5 +24,20 @@ export class HoldingsService {
 
   remove(id: number) {
     return `This action removes a #${id} holding`;
+  }
+
+  async findByUserId(userId: number) {
+    const holdings = await this.prisma.holding.findMany({
+      where: { userId },
+      include: { stock: true },
+    });
+
+    return holdings.map((h) => ({
+      stockId: h.stockId,
+      symbol: h.stock.symbol,
+      name: h.stock.name,
+      quantity: h.quantity,
+      price: h.stock.price,
+    }));
   }
 }
