@@ -15,22 +15,6 @@ import { CreateUserDto } from 'src/stock-history/dto/create-user.dto';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Post()
-  @ApiOperation({ summary: '유저 생성' })
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        name: { type: 'string' },
-        email: { type: 'string' },
-      },
-      required: ['name', 'email'],
-    },
-  })
-  createUser(@Body() dto: CreateUserDto) {
-    return this.userService.createUser(dto);
-  }
-
   @Get(':id')
   @ApiOperation({ summary: '유저 조회' })
   @ApiParam({ name: 'id', type: Number })

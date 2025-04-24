@@ -1,13 +1,24 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  ConflictException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import { LoginDto } from './auth.dto';
+import { SignupDto, LoginDto } from './auth.dto';
+import { JwtService } from '@nestjs/jwt';
+import { v4 as uuidv4 } from 'uuid';
+import { FirebaseService } from 'src/firebase/firebase.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly jwtService: JwtService,
+    private readonly firebaseService: FirebaseService,
+  ) {}
 
-  async signup(body: { name: string; email: string; password: string }) {
+  async signup(body: { name: string; email: string }) {
     const existingUser = await this.prisma.user.findUnique({
       where: { email: body.email },
     });
@@ -16,23 +27,93 @@ export class AuthService {
       throw new ConflictException('이미 가입된 이메일입니다.');
     }
 
-    const hashed = await bcrypt.hash(body.password, 10);
-
     const user = await this.prisma.user.create({
       data: {
         name: body.name,
         email: body.email,
-        passwordHash: hashed,
+        authProvider: 'google', // 또는 'apple'
+        isGuest: false,
+        wallet: {
+          create: { totalAsset: 10000000 },
+        },
       },
     });
 
+    const token = this.jwtService.sign({ userId: user.id });
+
     return {
-      userUuid: user.uuid,
-      name: user.name,
-      email: user.email,
+      token,
+      user: {
+        id: user.id,
+        uuid: user.uuid,
+        name: user.name,
+        email: user.email,
+      },
     };
   }
-  async login(body: LoginDto) {
-    return { message: `로그인 시도: ${body.email}` };
+
+  async login(body: any) {
+    throw new UnauthorizedException('이 앱은 소셜 로그인만 지원합니다.');
+  }
+
+  async guestLogin() {
+    const uuid = uuidv4();
+
+    const user = await this.prisma.user.create({
+      data: {
+        uuid,
+        authProvider: 'guest',
+        isGuest: true,
+        wallet: {
+          create: { totalAsset: 10000000 },
+        },
+      },
+    });
+
+    const token = this.jwtService.sign({ userId: user.id });
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        uuid: user.uuid,
+        isGuest: user.isGuest,
+      },
+    };
+  }
+  async googleLogin(idToken: string) {
+    const decoded = await this.firebaseService.verifyIdToken(idToken);
+    const { uid, email, name, picture } = decoded;
+
+    let user = await this.prisma.user.findUnique({
+      where: { email },
+    });
+
+    if (!user) {
+      user = await this.prisma.user.create({
+        data: {
+          name: name ?? '구글 사용자',
+          email,
+          authProvider: 'google',
+          isGuest: false,
+          avatarUrl: picture,
+          wallet: {
+            create: { totalAsset: 10000000 },
+          },
+        },
+      });
+    }
+
+    const token = this.jwtService.sign({ userId: user.id });
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        uuid: user.uuid,
+        name: user.name,
+        email: user.email,
+      },
+    };
   }
 }
