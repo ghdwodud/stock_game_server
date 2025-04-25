@@ -34,10 +34,8 @@ export class UserService {
           : { balance: { decrement: Math.abs(amount) } },
     });
   }
-  
 
   async getPortfolioByUuid(uuid: string) {
-    console.log(`getPortfolioByUuid uuid: ${uuid}`);
     const user = await this.prisma.user.findUnique({
       where: { uuid },
       include: {
@@ -56,10 +54,6 @@ export class UserService {
     if (!user.wallet) {
       console.error(`❌ 유저(${user.id})의 지갑 정보가 없습니다.`);
       throw new NotFoundException('지갑 정보 없음');
-    }
-
-    if (!user.holdings || user.holdings.length === 0) {
-      console.warn(`⚠️ 유저(${user.id})는 현재 보유한 주식이 없습니다.`);
     }
 
     const cash = user.wallet.balance;
@@ -83,14 +77,20 @@ export class UserService {
     const totalAsset = cash + stockValue;
     const initialAsset = INITIAL_ASSET;
     const profitRate = (totalAsset - initialAsset) / initialAsset;
-  
+
+    const holdings = user.holdings.map((h) => ({
+      stockId: h.stockId,
+      quantity: h.quantity,
+      avgBuyPrice: h.avgBuyPrice, // ✅ 추가
+    }));
+
     return {
       nickname: user.name ?? '이름 없음',
       cash,
       stockValue,
       totalAsset,
       profitRate,
+      holdings,
     };
   }
-  
 }

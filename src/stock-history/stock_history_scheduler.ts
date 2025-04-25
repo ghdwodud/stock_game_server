@@ -7,14 +7,14 @@ import { PrismaService } from 'src/prisma/prisma.service';
 export class StockHistoryScheduler {
   constructor(private readonly prisma: PrismaService) {}
 
-  // 매 1분마다 실행 (초 분 시 일 월 요일)
-  @Cron('*/1 * * * *')
+  // 매 5초마다 실행 (초 분 시 일 월 요일)
+  @Cron('*/5 * * * * *')
   async handleCron() {
     const stocks = await this.prisma.stock.findMany();
 
     for (const stock of stocks) {
-      // 예시: 현재 가격에서 +-5% 랜덤 변화 적용
-      const change = stock.price * (0.01 * (Math.random() * 2 - 1));
+      // 예시: 현재 가격에서 +-10% 랜덤 변화 적용
+      const change = stock.price * (0.1 * (Math.random() * 2 - 1));
       const newPrice = parseFloat((stock.price + change).toFixed(2));
 
       await this.prisma.stockHistory.create({

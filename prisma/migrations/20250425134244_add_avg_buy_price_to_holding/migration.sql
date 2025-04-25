@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Holding" ADD COLUMN     "avgBuyPrice" DOUBLE PRECISION NOT NULL DEFAULT 0;

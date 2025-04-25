@@ -6,32 +6,65 @@ import { PrismaService } from 'src/prisma/prisma.service';
 @Injectable()
 export class StocksService {
   constructor(private readonly prisma: PrismaService) {}
-  private stocks = [
-    { symbol: 'AAPL', name: '애플', price: 190.25, changeRate: 0 },
-    { symbol: 'TSLA', name: '테슬라', price: 720.0, changeRate: 0 },
-    { symbol: 'GOOGL', name: '구글', price: 134.5, changeRate: 0 },
-    { symbol: 'NVDA', name: '엔비디아', price: 1050.3, changeRate: 0 },
-  ];
   create(createStockDto: CreateStockDto) {
     return 'This action adds a new stock';
   }
 
   async findAll() {
-    return this.prisma.stock.findMany({
+    const stocks = await this.prisma.stock.findMany({
       orderBy: { symbol: 'asc' },
     });
+
+    const now = new Date();
+    const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+
+    const result = await Promise.all(
+      stocks.map(async (stock) => {
+        const referenceHistory = await this.prisma.stockHistory.findFirst({
+          where: {
+            stockId: stock.id,
+            timestamp: { lte: tenMinutesAgo }, // 10분 전에 가장 가까운 기록
+          },
+          orderBy: {
+            timestamp: 'desc', // 가장 최근 기록
+          },
+        });
+
+        let changeRate = 0;
+        if (referenceHistory) {
+          changeRate =
+            ((stock.price - referenceHistory.price) / referenceHistory.price) *
+            100;
+        }
+
+        return {
+          id: stock.id,
+          symbol: stock.symbol,
+          name: stock.name,
+          price: stock.price,
+          changeRate: parseFloat(changeRate.toFixed(2)), // 퍼센트로
+        };
+      }),
+    );
+
+    return result;
   }
 
-  updateAllPrices(): void {
-    this.stocks = this.stocks.map((stock) => {
+  async updateAllPrices(): Promise<void> {
+    const stocks = await this.prisma.stock.findMany();
+
+    for (const stock of stocks) {
       const changeRate = this.getRandomChangeRate();
       const newPrice = +(stock.price * (1 + changeRate)).toFixed(2);
-      return {
-        ...stock,
-        price: newPrice,
-        changeRate: +(changeRate * 100).toFixed(2), // 퍼센트로 표기
-      };
-    });
+
+      await this.prisma.stock.update({
+        where: { id: stock.id },
+        data: {
+          price: newPrice,
+          changeRate: +(changeRate * 100).toFixed(2), // 퍼센트로 저장
+        },
+      });
+    }
   }
 
   private getRandomChangeRate(): number {
@@ -44,8 +77,10 @@ export class StocksService {
     return isUp ? change : -change;
   }
 
-  findOne(id: number) {
-    return this.stocks[id] ?? null;
+  async findOne(id: number) {
+    return this.prisma.stock.findUnique({
+      where: { id },
+    });
   }
 
   update(id: number, updateStockDto: UpdateStockDto) {

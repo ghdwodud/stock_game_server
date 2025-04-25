@@ -63,11 +63,13 @@ model Holding {
   userId   Int
   stockId  Int
   quantity Int
+  avgBuyPrice Float @default(0) // ✅ 추가: 평균 매수 가격
   user     User   @relation(fields: [userId], references: [id])
   stock    Stock  @relation(fields: [stockId], references: [id])
 
   @@unique([userId, stockId])
 }
+
 
 model UserTransaction {
   id        Int      @id @default(autoincrement())
