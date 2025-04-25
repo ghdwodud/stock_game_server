@@ -10,8 +10,6 @@ export class StockHistoryScheduler {
   // 매 1분마다 실행 (초 분 시 일 월 요일)
   @Cron('*/1 * * * *')
   async handleCron() {
-    console.log('📈 [CRON] 스톡 히스토리 기록 중...');
-
     const stocks = await this.prisma.stock.findMany();
 
     for (const stock of stocks) {
@@ -31,8 +29,6 @@ export class StockHistoryScheduler {
         where: { id: stock.id },
         data: { price: newPrice },
       });
-
-      console.log(`📌 ${stock.symbol} → ${newPrice}`);
     }
   }
 }

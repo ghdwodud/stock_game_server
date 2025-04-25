@@ -1,11 +1,13 @@
 // buy-stock.dto.ts
-import { IsInt, IsPositive } from 'class-validator';
+import { ApiProperty } from '@nestjs/swagger';
+import { IsNumber } from 'class-validator';
 
 export class BuyStockDto {
-  @IsInt()
+  @IsNumber()
+  @ApiProperty({ example: 1, description: '주식 ID' })
   stockId: number;
 
-  @IsInt()
-  @IsPositive()
+  @IsNumber()
+  @ApiProperty({ example: 5, description: '매수 수량' })
   quantity: number;
 }
