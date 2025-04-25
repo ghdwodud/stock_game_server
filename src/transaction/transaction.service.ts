@@ -11,10 +11,16 @@ export class TransactionService {
 
     try {
       return await this.prisma.$transaction(async (tx) => {
-        const user = await tx.user.findUnique({ where: { uuid: userUuid } });
+        const user = await tx.user.findUnique({
+          where: { uuid: userUuid },
+          include: { wallet: true }, 
+        });
+
+        
         if (!user) {
           throw new Error('유저 정보를 찾을 수 없습니다.');
         }
+
 
         const stock = await tx.stock.findUnique({ where: { id: stockId } });
         if (!stock) {
@@ -22,16 +28,14 @@ export class TransactionService {
         }
 
         const totalPrice = stock.price * quantity;
-
-        if (user.balance < totalPrice) {
+        if (!user.wallet || user.wallet.balance < totalPrice) {
           throw new Error('잔고가 부족합니다.');
         }
 
-        await tx.user.update({
-          where: { id: user.id },
+        await tx.wallet.update({
+          where: { userId: user.id },
           data: { balance: { decrement: totalPrice } },
         });
-
         await tx.holding.upsert({
           where: {
             userId_stockId: {
@@ -104,8 +108,8 @@ export class TransactionService {
         const totalPrice = stock.price * quantity;
 
         // ✅ 잔고 증가
-        await tx.user.update({
-          where: { id: user.id },
+        await tx.wallet.update({
+          where: { userId: user.id },
           data: { balance: { increment: totalPrice } },
         });
 

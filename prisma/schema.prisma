@@ -16,7 +16,6 @@ model User {
   authProvider String   // 'guest' | 'google' | 'apple'
   isGuest      Boolean  @default(false)
   avatarUrl    String?
-  balance      Float    @default(10000)
   level        Int      @default(1)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -55,6 +54,7 @@ model Wallet {
   userId     Int      @unique
   totalAsset Float    @default(0)
   updatedAt  DateTime @updatedAt
+  balance      Float    @default(10000)
 
   user User @relation(fields: [userId], references: [id])
 }

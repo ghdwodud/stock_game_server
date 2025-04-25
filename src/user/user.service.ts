@@ -20,14 +20,21 @@ export class UserService {
   }
 
   async adjustCashByUuid(uuid: string, amount: number) {
-    const user = await this.prisma.user.findUnique({ where: { uuid } });
+    const user = await this.prisma.user.findUnique({
+      where: { uuid },
+    });
+
     if (!user) throw new NotFoundException('유저를 찾을 수 없습니다.');
 
-    return this.prisma.user.update({
-      where: { uuid },
-      data: { balance: user.balance + amount },
+    return this.prisma.wallet.update({
+      where: { userId: user.id },
+      data:
+        amount >= 0
+          ? { balance: { increment: amount } }
+          : { balance: { decrement: Math.abs(amount) } },
     });
   }
+  
 
   async getPortfolioByUuid(uuid: string) {
     const user = await this.prisma.user.findUnique({
@@ -42,7 +49,7 @@ export class UserService {
     }
 
     const totalAsset = user.wallet.totalAsset;
-    const cash = user.balance;
+    const cash = user.wallet.balance; // ✅ 변경됨
     const stockValue = totalAsset - cash;
     const initialAsset = INITIAL_ASSET; // 기본 시작 금액
     const profitRate = (totalAsset - initialAsset) / initialAsset;
@@ -55,4 +62,5 @@ export class UserService {
       profitRate,
     };
   }
+  
 }
