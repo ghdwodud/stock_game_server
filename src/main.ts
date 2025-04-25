@@ -16,7 +16,7 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document); // http://localhost:3000/api-docs 에서 확인 가능
+  SwaggerModule.setup('api', app, document); // http://localhost:3000/api 에서 확인 가능
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   await app.listen(3000);
 }
