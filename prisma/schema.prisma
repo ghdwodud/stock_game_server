@@ -52,7 +52,6 @@ model StockHistory {
 model Wallet {
   id         Int      @id @default(autoincrement())
   userId     Int      @unique
-  totalAsset Float    @default(0)
   updatedAt  DateTime @updatedAt
   balance      Float    @default(10000)
 

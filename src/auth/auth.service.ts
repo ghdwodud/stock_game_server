@@ -24,30 +24,31 @@ export class AuthService {
   async guestLogin() {
     const uuid = uuidv4();
     const nickname = this.nicknameGenerator.generate();
-
+  
     const user = await this.prisma.user.create({
       data: {
         uuid,
-        name: nickname, // ✅ 닉네임 저장
+        name: nickname,
         authProvider: 'guest',
         isGuest: true,
         wallet: {
-          create: { totalAsset: INITIAL_ASSET },
+          create: { balance: INITIAL_ASSET }, // ✅ 수정 완료
         },
       },
     });
-
+  
     const token = this.jwtService.sign({ userUuid: user.uuid });
-
+  
     return {
       token,
       user: {
         uuid: user.uuid,
         isGuest: user.isGuest,
-        nickname: user.name, // ✅ 이제 정상 반환됨
+        nickname: user.name,
       },
     };
   }
+  
 
   async googleLogin(idToken: string) {
     const decoded = await this.firebaseService.verifyIdToken(idToken);
@@ -67,7 +68,9 @@ export class AuthService {
           isGuest: false,
           avatarUrl: picture,
           wallet: {
-            create: { totalAsset: INITIAL_ASSET },
+            create: {
+              balance: INITIAL_ASSET, // ✅ totalAsset 제거, balance만 초기화
+            },
           },
         },
       });
@@ -84,4 +87,5 @@ export class AuthService {
       },
     };
   }
+  
 }
