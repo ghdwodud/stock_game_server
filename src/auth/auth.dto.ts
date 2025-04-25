@@ -1,4 +1,4 @@
-// auth.dto.ts
+import { IsString } from 'class-validator';
 export class SignupDto {
   name: string;
   email: string;
@@ -8,4 +8,9 @@ export class SignupDto {
 export class LoginDto {
   email: string;
   password: string;
+}
+
+export class GoogleLoginDto {
+  @IsString()
+  idToken: string;
 }

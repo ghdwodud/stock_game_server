@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
 import { FirebaseService } from 'src/firebase/firebase.service';
 import { NicknameGeneratorService } from 'src/common/nickname-generator/nickname-generator.service';
+import { INITIAL_ASSET } from 'src/common/nickname-generator/constants';
 
 @Injectable()
 export class AuthService {
@@ -19,44 +20,6 @@ export class AuthService {
     private readonly firebaseService: FirebaseService,
     private readonly nicknameGenerator: NicknameGeneratorService,
   ) {}
-
-  async signup(body: { name: string; email: string }) {
-    const existingUser = await this.prisma.user.findUnique({
-      where: { email: body.email },
-    });
-
-    if (existingUser) {
-      throw new ConflictException('이미 가입된 이메일입니다.');
-    }
-
-    const user = await this.prisma.user.create({
-      data: {
-        name: body.name,
-        email: body.email,
-        authProvider: 'google', // 또는 'apple'
-        isGuest: false,
-        wallet: {
-          create: { totalAsset: 10000000 },
-        },
-      },
-    });
-
-    const token = this.jwtService.sign({ userId: user.id });
-
-    return {
-      token,
-      user: {
-        id: user.id,
-        uuid: user.uuid,
-        name: user.name,
-        email: user.email,
-      },
-    };
-  }
-
-  async login(body: any) {
-    throw new UnauthorizedException('이 앱은 소셜 로그인만 지원합니다.');
-  }
 
   async guestLogin() {
     const uuid = uuidv4();
@@ -69,7 +32,7 @@ export class AuthService {
         authProvider: 'guest',
         isGuest: true,
         wallet: {
-          create: { totalAsset: 10000000 },
+          create: { totalAsset: INITIAL_ASSET },
         },
       },
     });
@@ -104,7 +67,7 @@ export class AuthService {
           isGuest: false,
           avatarUrl: picture,
           wallet: {
-            create: { totalAsset: 10000000 },
+            create: { totalAsset: INITIAL_ASSET },
           },
         },
       });

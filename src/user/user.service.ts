@@ -1,4 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { INITIAL_ASSET } from 'src/common/nickname-generator/constants';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -43,7 +44,7 @@ export class UserService {
     const totalAsset = user.wallet.totalAsset;
     const cash = user.balance;
     const stockValue = totalAsset - cash;
-    const initialAsset = 10_000_000; // 기본 시작 금액
+    const initialAsset = INITIAL_ASSET; // 기본 시작 금액
     const profitRate = (totalAsset - initialAsset) / initialAsset;
 
     return {

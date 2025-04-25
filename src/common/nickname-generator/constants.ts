@@ -1,0 +1,1 @@
+export const INITIAL_ASSET = 10000;
