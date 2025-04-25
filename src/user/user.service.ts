@@ -1,36 +1,36 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
-import * as bcrypt from 'bcrypt';
+
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findById(id: number) {
+  async findByUuid(uuid: string) {
     return this.prisma.user.findUnique({
-      where: { id },
+      where: { uuid },
     });
   }
 
-  async updateUser(id: number, data: Partial<{ name: string; email: string }>) {
+  async updateNameByUuid(uuid: string, name: string) {
     return this.prisma.user.update({
-      where: { id },
-      data,
+      where: { uuid },
+      data: { name },
     });
   }
 
-  async adjustCash(id: number, amount: number) {
-    const user = await this.prisma.user.findUnique({ where: { id } });
-    if (!user) throw new Error('User not found');
+  async adjustCashByUuid(uuid: string, amount: number) {
+    const user = await this.prisma.user.findUnique({ where: { uuid } });
+    if (!user) throw new NotFoundException('유저를 찾을 수 없습니다.');
 
     return this.prisma.user.update({
-      where: { id },
+      where: { uuid },
       data: { balance: user.balance + amount },
     });
   }
 
-  async getPortfolio(userId: number) {
+  async getPortfolioByUuid(uuid: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id: userId },
+      where: { uuid },
       include: {
         wallet: true,
       },
@@ -47,43 +47,11 @@ export class UserService {
     const profitRate = (totalAsset - initialAsset) / initialAsset;
 
     return {
-      nickname: user.name,
+      nickname: user.name ?? '이름 없음',
       cash,
       stockValue,
       totalAsset,
       profitRate,
     };
   }
-
-  // async addStock(userId: number, stockCode: string, quantity: number) {
-  //   const existing = await this.prisma.userStock.findFirst({
-  //     where: { userId, stockCode },
-  //   });
-
-  //   if (existing) {
-  //     return this.prisma.userStock.update({
-  //       where: { id: existing.id },
-  //       data: { quantity: existing.quantity + quantity },
-  //     });
-  //   } else {
-  //     return this.prisma.userStock.create({
-  //       data: { userId, stockCode, quantity },
-  //     });
-  //   }
-  // }
-
-  // async subtractStock(userId: number, stockCode: string, quantity: number) {
-  //   const existing = await this.prisma.userStock.findFirst({
-  //     where: { userId, stockCode },
-  //   });
-
-  //   if (!existing || existing.quantity < quantity) {
-  //     throw new Error('Not enough stock to subtract');
-  //   }
-
-  //   return this.prisma.userStock.update({
-  //     where: { id: existing.id },
-  //     data: { quantity: existing.quantity - quantity },
-  //   });
-  // }
 }

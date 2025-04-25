@@ -8,29 +8,29 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBody, ApiParam } from '@nestjs/swagger';
 import { UserService } from './user.service';
-import { CreateUserDto } from 'src/stock-history/dto/create-user.dto';
 
-@ApiTags('users') // ✅ Swagger 그룹명
+@ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @Get(':id')
-  @ApiOperation({ summary: '유저 조회' })
-  @ApiParam({ name: 'id', type: Number })
-  async getUser(@Param('id') id: string) {
-    return this.userService.findById(Number(id));
+  @Get(':uuid')
+  @ApiOperation({ summary: '유저 조회 (UUID 기반)' })
+  @ApiParam({ name: 'uuid', type: String })
+  async getUser(@Param('uuid') uuid: string) {
+    return this.userService.findByUuid(uuid);
   }
 
-  // user.controller.ts
-  @Get(':userId/portfolio')
-  getPortfolio(@Param('userId') userId: string) {
-    return this.userService.getPortfolio(Number(userId));
+  @Get(':uuid/portfolio')
+  @ApiOperation({ summary: '유저 포트폴리오 조회 (UUID 기반)' })
+  @ApiParam({ name: 'uuid', type: String })
+  getPortfolio(@Param('uuid') uuid: string) {
+    return this.userService.getPortfolioByUuid(uuid);
   }
 
-  @Patch(':id/cash')
-  @ApiOperation({ summary: '유저 잔액 수정' })
-  @ApiParam({ name: 'id', type: Number })
+  @Patch(':uuid/cash')
+  @ApiOperation({ summary: '유저 잔액 수정 (UUID 기반)' })
+  @ApiParam({ name: 'uuid', type: String })
   @ApiBody({
     schema: {
       type: 'object',
@@ -40,14 +40,20 @@ export class UserController {
       required: ['amount'],
     },
   })
-  async adjustCash(@Param('id') id: string, @Body() body: { amount: number }) {
-    return this.userService.adjustCash(Number(id), body.amount);
+  async adjustCash(
+    @Param('uuid') uuid: string,
+    @Body() body: { amount: number },
+  ) {
+    return this.userService.adjustCashByUuid(uuid, body.amount);
   }
 
-  @Patch(':id/name')
-  @ApiOperation({ summary: '유저 이름 변경' })
-  async updateName(@Param('id') id: string, @Body() body: { name: string }) {
-    return this.userService.updateUser(Number(id), { name: body.name });
+  @Patch(':uuid/name')
+  @ApiOperation({ summary: '유저 이름 변경 (UUID 기반)' })
+  @ApiParam({ name: 'uuid', type: String })
+  async updateName(
+    @Param('uuid') uuid: string,
+    @Body() body: { name: string },
+  ) {
+    return this.userService.updateNameByUuid(uuid, body.name);
   }
 }
-``
