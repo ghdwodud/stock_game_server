@@ -93,4 +93,24 @@ export class UserService {
       holdings,
     };
   }
+
+  async incrementCash(userUuid: string, amount: number) {
+    // 1. 먼저 userUuid로 user.id를 찾아야 함
+    const user = await this.prisma.user.findUnique({
+      where: { uuid: userUuid },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new Error('유저를 찾을 수 없습니다.');
+    }
+
+    // 2. user.id로 wallet balance를 업데이트
+    await this.prisma.wallet.update({
+      where: { userId: user.id },
+      data: {
+        balance: { increment: amount },
+      },
+    });
+  }
 }
