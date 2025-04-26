@@ -1,4 +1,3 @@
-// stock-history.scheduler.ts
 import { Injectable } from '@nestjs/common';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -13,10 +12,27 @@ export class StockHistoryScheduler {
     const stocks = await this.prisma.stock.findMany();
 
     for (const stock of stocks) {
-      // 예시: 현재 가격에서 +-10% 랜덤 변화 적용
-      const change = stock.price * (0.1 * (Math.random() * 2 - 1));
-      const newPrice = parseFloat((stock.price + change).toFixed(2));
+      // 가격 변동 비율: -10% ~ +10%
+      const randomFactor = 0.1 * (Math.random() * 2 - 1);
 
+      // 변동폭 계산
+      let change = stock.price * randomFactor;
+
+      // 변동폭 최소 0.01 이상 보장
+      if (Math.abs(change) < 0.01) {
+        change = 0.01 * (change >= 0 ? 1 : -1);
+      }
+
+      // 새로운 가격 계산
+      let newPrice = stock.price + change;
+
+      // 가격이 1.00 미만으로 떨어지지 않게 강제 고정
+      newPrice = Math.max(newPrice, 1.0);
+
+      // 소수점 2자리까지 반올림
+      newPrice = parseFloat(newPrice.toFixed(2));
+
+      // 새로운 가격 기록
       await this.prisma.stockHistory.create({
         data: {
           stockId: stock.id,
@@ -24,7 +40,7 @@ export class StockHistoryScheduler {
         },
       });
 
-      // stock 테이블의 가격도 업데이트 (선택사항)
+      // stock 테이블의 가격도 업데이트
       await this.prisma.stock.update({
         where: { id: stock.id },
         data: { price: newPrice },
