@@ -20,11 +20,10 @@ export class AuthService {
     private readonly firebaseService: FirebaseService,
     private readonly nicknameGenerator: NicknameGeneratorService,
   ) {}
-
   async guestLogin() {
     const uuid = uuidv4();
     const nickname = this.nicknameGenerator.generate();
-  
+
     const user = await this.prisma.user.create({
       data: {
         uuid,
@@ -32,23 +31,32 @@ export class AuthService {
         authProvider: 'guest',
         isGuest: true,
         wallet: {
-          create: { balance: INITIAL_ASSET }, // ✅ 수정 완료
+          create: { balance: INITIAL_ASSET },
         },
       },
     });
-  
-    const token = this.jwtService.sign({ userUuid: user.uuid });
-  
+
+    const accessToken = this.jwtService.sign(
+      { userUuid: user.uuid },
+      { expiresIn: '1m' },
+    );
+    const refreshToken = this.jwtService.sign(
+      { userUuid: user.uuid },
+      { expiresIn: '14d' },
+    );
+
+    await this.storeRefreshToken(user.uuid, refreshToken); // ✅ refreshToken 저장
+
     return {
-      token,
+      token: accessToken,
+      refreshToken, // ✅ 추가
       user: {
         uuid: user.uuid,
+        name: user.name,
         isGuest: user.isGuest,
-        nickname: user.name,
       },
     };
   }
-  
 
   async googleLogin(idToken: string) {
     const decoded = await this.firebaseService.verifyIdToken(idToken);
@@ -69,17 +77,25 @@ export class AuthService {
           avatarUrl: picture,
           wallet: {
             create: {
-              balance: INITIAL_ASSET, // ✅ totalAsset 제거, balance만 초기화
+              balance: INITIAL_ASSET,
             },
           },
         },
       });
     }
 
-    const token = this.jwtService.sign({ userUuid: user.uuid });
+    const accessToken = this.jwtService.sign(
+      { userUuid: user.uuid },
+      { expiresIn: '15m' },
+    );
+    const refreshToken = uuidv4();
+
+    // ⭐ refreshToken 테이블에 저장
+    await this.storeRefreshToken(user.uuid, refreshToken);
 
     return {
-      token,
+      token: accessToken,
+      refreshToken, // ✅ 이거 추가
       user: {
         uuid: user.uuid,
         name: user.name,
@@ -87,5 +103,54 @@ export class AuthService {
       },
     };
   }
-  
+
+  async refreshToken(refreshToken: string) {
+    const tokenRecord = await this.prisma.refreshToken.findUnique({
+      where: { token: refreshToken },
+      include: { user: true },
+    });
+
+    if (!tokenRecord || !tokenRecord.user) {
+      throw new UnauthorizedException('유효하지 않은 refresh token입니다.');
+    }
+
+    const accessToken = this.jwtService.sign(
+      { userUuid: tokenRecord.user.uuid },
+      { expiresIn: '15m' },
+    );
+
+    const newRefreshToken = this.jwtService.sign(
+      { userUuid: tokenRecord.user.uuid },
+      { expiresIn: '14d' },
+    );
+
+    // 기존 refreshToken 레코드 갱신
+    await this.prisma.refreshToken.update({
+      where: { id: tokenRecord.id },
+      data: { token: newRefreshToken },
+    });
+
+    return {
+      accessToken: accessToken,
+      refreshToken: newRefreshToken,
+    };
+  }
+
+  async storeRefreshToken(userUuid: string, refreshToken: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { uuid: userUuid },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        token: refreshToken,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 예시: 7일 후 만료
+      },
+    });
+  }
 }

@@ -23,6 +23,7 @@ model User {
   wallet       Wallet?
   holdings     Holding[]
   userTransactions UserTransaction[] 
+  refreshTokens RefreshToken[]
 }
 
 model Stock {
@@ -89,4 +90,17 @@ enum TransactionType {
   BUY
   SELL
 }
+
+model RefreshToken {
+  id          Int      @id @default(autoincrement())
+  token       String   @unique
+  userId      Int
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
+
+  @@index([userId])
+}
+
+
 
