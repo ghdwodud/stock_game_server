@@ -1,31 +1,46 @@
-## Deployment Architecture
+## 배포 구성
 
-This server is deployed using an automated GitHub Actions + AWS S3 + EC2 + RDS pipeline.
+본 서버는 실제 서비스 수준의 인프라를 기반으로 운영되고 있으며,  
+**도메인 연결, HTTPS 인증서, 자동화 배포 파이프라인까지 직접 구성**하였습니다.
 
-### Infrastructure Setup
+---
 
-- **EC2**: AWS EC2 instance (Ubuntu) hosts the NestJS server.
-- **RDS**: AWS RDS (PostgreSQL) used for production database.
-- **S3**: Build artifacts are uploaded to S3 bucket for deployment.
+### 🔧 인프라 구성 요약
 
-### Deployment Flow
+| 구성 요소 | 사용 기술 |
+|-----------|-----------|
+| 서버 | AWS EC2 (Ubuntu) |
+| DB | AWS RDS (PostgreSQL) |
+| 배포 자동화 | GitHub Actions + S3 + cron |
+| 도메인 | Cloudflare |
+| 리버스 프록시 | Nginx |
+| 프로세스 관리 | PM2 |
+| 인증서 | Cloudflare Full SSL |
 
-1. **GitHub Actions** automatically builds the project upon push to `main` branch.
-2. Build artifacts are uploaded to **AWS S3**.
-3. **EC2 server** uses a scheduled **cron job** to periodically fetch the latest build from S3.
-4. After fetching, the server automatically restarts using **PM2** (or systemd).
+---
 
-### Technical Challenges and Solutions
+### 🌐 도메인 및 HTTPS 구성
 
-- **Issue**: GitHub Actions cannot directly access EC2 due to dynamic IP changes.
-- **Solution**: Implemented an S3-based deployment system as an intermediate step.
+- 도메인: `https://stockgame.cc`
+- Cloudflare를 통해 도메인 구매 및 DNS 설정
+- SSL 인증은 Cloudflare Full SSL 모드 사용
 
-  - **Why**: GitHub Action IPs are dynamic and hard to whitelist.
-  - **Result**: Stable, fully automated, and secure deployment flow without manual IP management.
+---
 
-### Summary
+### 🔁 리버스 프록시 (Nginx)
 
-- Fully automated CI/CD pipeline without manual server intervention.
-- Designed to be resilient against network/IP change issues.
-- Easily scalable for multiple servers in the future by sharing the same S3 artifacts.
+- 외부 요청은 Nginx가 80/443 포트에서 받아 내부 NestJS 서버로 전달
+- SSL 종료(SSL termination)도 Nginx에서 수행
+- 예시 설정:
 
+```nginx
+server {
+  listen 80;
+  server_name stockgame.cc www.stockgame.cc;
+
+  location / {
+    proxy_pass http://localhost:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+  }
+}
