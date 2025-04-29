@@ -6,13 +6,24 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { StockHistoryService } from './stock-history.service';
 import { CreateStockHistoryDto } from './dto/create-stock-history.dto';
 import { UpdateStockHistoryDto } from './dto/update-stock-history.dto';
-import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+  ApiBody,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 
+@ApiBearerAuth('access-token')
 @ApiTags('StockHistory') // Swagger에서 그룹 이름 지정
+@UseGuards(JwtAuthGuard)
 @Controller('stock-history')
 export class StockHistoryController {
   constructor(private readonly stockHistoryService: StockHistoryService) {}

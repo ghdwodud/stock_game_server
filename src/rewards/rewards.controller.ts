@@ -16,8 +16,11 @@ import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { UserService } from 'src/user/user.service';
 import { Request } from 'express'; // ✅ 타입은 express.Request를 명시
 import { RequestWithUser } from 'src/auth/types/request-with-user';
-import { ApiBearerAuth } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 
+@ApiBearerAuth('access-token')
+@ApiTags('Rewards')
+@UseGuards(JwtAuthGuard)
 @Controller('rewards')
 export class RewardsController {
   constructor(
@@ -31,11 +34,8 @@ export class RewardsController {
   }
 
   @Post('watch-ad')
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('access-token')
   async rewardWatchAd(@Req() req: RequestWithUser) {
     const userId = req.user.userUuid;
-
     await this.userService.incrementCash(userId, 10000);
     return { message: 'Reward granted' };
   }
