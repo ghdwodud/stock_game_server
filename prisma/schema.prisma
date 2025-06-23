@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client-js"
-output   = "../node_modules/.prisma/client"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -10,10 +10,10 @@ datasource db {
 
 model User {
   id           Int      @id @default(autoincrement())
-  uuid         String   @default(uuid()) @unique
+  uuid         String   @unique @default(uuid())
   name         String?
   email        String?  @unique
-  authProvider String   // 'guest' | 'google' | 'apple'
+  authProvider String // 'guest' | 'google' | 'apple'
   isGuest      Boolean  @default(false)
   avatarUrl    String?
   level        Int      @default(1)
@@ -21,25 +21,29 @@ model User {
   updatedAt    DateTime @updatedAt
   password     String?
 
-  wallet       Wallet?
-  holdings     Holding[]
-  userTransactions UserTransaction[] 
-  refreshTokens RefreshToken[]
+  wallet                 Wallet?
+  holdings               Holding[]
+  userTransactions       UserTransaction[]
+  refreshTokens          RefreshToken[]
+  sentFriendRequests     FriendRequest[]   @relation("SentFriendRequests")
+  receivedFriendRequests FriendRequest[]   @relation("ReceivedFriendRequests")
+  userFriends            Friend[]          @relation("UserFriends")
+  friendUsers            Friend[]          @relation("FriendUsers")
 }
 
 model Stock {
-  id          Int              @id @default(autoincrement())
-  symbol      String           @unique
-  name        String
-  price       Float
-  prevPrice   Float?
-  changeRate  Float?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id         Int      @id @default(autoincrement())
+  symbol     String   @unique
+  name       String
+  price      Float
+  prevPrice  Float?
+  changeRate Float?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
-  histories   StockHistory[]
-  holdings     Holding[]
-  userTransactions UserTransaction[] 
+  histories        StockHistory[]
+  holdings         Holding[]
+  userTransactions UserTransaction[]
 }
 
 model StockHistory {
@@ -52,36 +56,35 @@ model StockHistory {
 }
 
 model Wallet {
-  id         Int      @id @default(autoincrement())
-  userId     Int      @unique
-  updatedAt  DateTime @updatedAt
-  balance      Float    @default(10000)
+  id        Int      @id @default(autoincrement())
+  userId    Int      @unique
+  updatedAt DateTime @updatedAt
+  balance   Float    @default(10000)
 
   user User @relation(fields: [userId], references: [id])
 }
 
 model Holding {
-  id       Int    @id @default(autoincrement())
-  userId   Int
-  stockId  Int
-  quantity Int
+  id          Int   @id @default(autoincrement())
+  userId      Int
+  stockId     Int
+  quantity    Int
   avgBuyPrice Float @default(0) // ✅ 추가: 평균 매수 가격
-  user     User   @relation(fields: [userId], references: [id])
-  stock    Stock  @relation(fields: [stockId], references: [id])
+  user        User  @relation(fields: [userId], references: [id])
+  stock       Stock @relation(fields: [stockId], references: [id])
 
   @@unique([userId, stockId])
 }
 
-
 model UserTransaction {
-  id        Int      @id @default(autoincrement())
+  id        Int             @id @default(autoincrement())
   userId    Int
   stockId   Int
   quantity  Int
   price     Float
   total     Float
   type      TransactionType
-  createdAt DateTime @default(now())
+  createdAt DateTime        @default(now())
 
   user  User  @relation(fields: [userId], references: [id])
   stock Stock @relation(fields: [stockId], references: [id])
@@ -93,15 +96,39 @@ enum TransactionType {
 }
 
 model RefreshToken {
-  id          Int      @id @default(autoincrement())
-  token       String   @unique
-  userId      Int
-  user        User     @relation(fields: [userId], references: [id])
-  createdAt   DateTime @default(now())
-  expiresAt   DateTime
+  id        Int      @id @default(autoincrement())
+  token     String   @unique
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+  expiresAt DateTime
 
   @@index([userId])
 }
 
+enum FriendRequestStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
 
+model FriendRequest {
+  id         String              @id @default(uuid())
+  senderId   Int
+  receiverId Int
+  status     FriendRequestStatus @default(PENDING)
+  createdAt  DateTime            @default(now())
 
+  sender   User @relation("SentFriendRequests", fields: [senderId], references: [id])
+  receiver User @relation("ReceivedFriendRequests", fields: [receiverId], references: [id])
+}
+
+model Friend {
+  id        String   @id @default(uuid())
+  userId    Int
+  friendId  Int
+  createdAt DateTime @default(now())
+
+  user   User @relation("UserFriends", fields: [userId], references: [id])
+  friend User @relation("FriendUsers", fields: [friendId], references: [id])
+}

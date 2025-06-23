@@ -113,4 +113,16 @@ export class UserService {
       },
     });
   }
+  async getUserIdByUuid(uuid: string): Promise<number> {
+    const user = await this.prisma.user.findUnique({
+      where: { uuid },
+      select: { id: true },
+    });
+
+    if (!user) {
+      throw new NotFoundException('유저를 찾을 수 없습니다.');
+    }
+
+    return user.id;
+  }
 }

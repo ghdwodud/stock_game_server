@@ -11,6 +11,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { JwtModule } from '@nestjs/jwt';
 import { FirebaseModule } from './firebase/firebase.module';
 import { TransactionModule } from './transaction/transaction.module';
+import { FriendsModule } from './friends/friends.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { TransactionModule } from './transaction/transaction.module';
     ScheduleModule.forRoot(),
     JwtModule,
     TransactionModule,
+    FriendsModule,
   ],
   controllers: [],
   providers: [],
