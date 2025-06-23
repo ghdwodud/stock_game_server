@@ -17,11 +17,6 @@ export class AuthController {
     private readonly jwtService: JwtService,
   ) {}
 
-  @Post('guest-login')
-  async guestLogin() {
-    return this.authService.guestLogin();
-  }
-
   @Post('google-login')
   async googleLogin(@Body() body: GoogleLoginDto) {
     return this.authService.googleLogin(body.idToken);
@@ -31,5 +26,18 @@ export class AuthController {
   @HttpCode(200)
   async refreshToken(@Body('refreshToken') refreshToken: string) {
     return this.authService.refreshToken(refreshToken);
+  }
+
+  @Post('register')
+  async register(@Body() dto: SignupDto) {
+    console.log('dto:', dto);
+    return this.authService.register(dto);
+  }
+
+  @Post('login')
+  @HttpCode(200)
+  async login(@Body() dto: LoginDto) {
+    console.log('dto:', dto);
+    return this.authService.login(dto);
   }
 }

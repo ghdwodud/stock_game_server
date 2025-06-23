@@ -2,6 +2,7 @@ import {
   Injectable,
   ConflictException,
   UnauthorizedException,
+  BadRequestException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
@@ -20,43 +21,6 @@ export class AuthService {
     private readonly firebaseService: FirebaseService,
     private readonly nicknameGenerator: NicknameGeneratorService,
   ) {}
-  async guestLogin() {
-    const uuid = uuidv4();
-    const nickname = this.nicknameGenerator.generate();
-
-    const user = await this.prisma.user.create({
-      data: {
-        uuid,
-        name: nickname,
-        authProvider: 'guest',
-        isGuest: true,
-        wallet: {
-          create: { balance: INITIAL_ASSET },
-        },
-      },
-    });
-
-    const accessToken = this.jwtService.sign(
-      { userUuid: user.uuid },
-      { expiresIn: '1m' },
-    );
-    const refreshToken = this.jwtService.sign(
-      { userUuid: user.uuid },
-      { expiresIn: '14d' },
-    );
-
-    await this.storeRefreshToken(user.uuid, refreshToken); // ✅ refreshToken 저장
-
-    return {
-      token: accessToken,
-      refreshToken, // ✅ 추가
-      user: {
-        uuid: user.uuid,
-        name: user.name,
-        isGuest: user.isGuest,
-      },
-    };
-  }
 
   async googleLogin(idToken: string) {
     const decoded = await this.firebaseService.verifyIdToken(idToken);
@@ -152,5 +116,97 @@ export class AuthService {
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 예시: 7일 후 만료
       },
     });
+  }
+
+  async register(dto: SignupDto) {
+    const { email, name, password } = dto;
+
+    // 1. 이메일 중복 체크
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email },
+    });
+    if (existingUser) {
+      throw new BadRequestException('이미 가입된 이메일입니다.');
+    }
+
+    // 2. 비밀번호 해싱
+    const hashed = await bcrypt.hash(password, 10);
+
+    // 3. 유저 생성
+    const user = await this.prisma.user.create({
+      data: {
+        email,
+        name,
+        password: hashed,
+        authProvider: 'email',
+        isGuest: false,
+      },
+    });
+
+    // 4. 지갑 생성
+    await this.prisma.wallet.create({
+      data: {
+        userId: user.id,
+      },
+    });
+
+    // 5. 토큰 발급
+    const token = this.jwtService.sign({ sub: user.id });
+
+    return {
+      token,
+      user: {
+        id: user.id,
+        uuid: user.uuid,
+        email: user.email,
+        name: user.name,
+        authProvider: user.authProvider,
+        isGuest: user.isGuest,
+      },
+    };
+  }
+
+  async login(dto: LoginDto) {
+    const { email, password } = dto;
+
+    const user = await this.prisma.user.findUnique({ where: { email } });
+
+    if (!user || user.authProvider !== 'email' || !user.password) {
+      throw new BadRequestException('이메일/비밀번호가 올바르지 않습니다.');
+    }
+
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) {
+      throw new BadRequestException('이메일/비밀번호가 올바르지 않습니다.');
+    }
+
+    const accessToken = this.jwtService.sign({ sub: user.id });
+
+    // ✅ refreshToken 발급 및 DB 저장
+    const refreshToken = this.jwtService.sign(
+      { sub: user.id },
+      { expiresIn: '7d' },
+    );
+
+    await this.prisma.refreshToken.create({
+      data: {
+        token: refreshToken,
+        userId: user.id,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7일
+      },
+    });
+
+    return {
+      token: accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        uuid: user.uuid,
+        email: user.email,
+        name: user.name,
+        authProvider: user.authProvider,
+        isGuest: user.isGuest,
+      },
+    };
   }
 }
