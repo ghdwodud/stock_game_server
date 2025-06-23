@@ -4,11 +4,15 @@ import {
   Controller,
   HttpCode,
   Post,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { GoogleLoginDto, LoginDto, SignupDto } from './auth.dto';
 import { ApiBearerAuth } from '@nestjs/swagger';
 import { JwtService } from '@nestjs/jwt';
+import { JwtAuthGuard } from './jwt-auth.guard';
+import { RequestWithUser } from './types/request-with-user';
 
 @Controller('auth')
 export class AuthController {
@@ -39,5 +43,16 @@ export class AuthController {
   async login(@Body() dto: LoginDto) {
     console.log('dto:', dto);
     return this.authService.login(dto);
+  }
+
+  @Post('logout')
+  @HttpCode(200)
+  @UseGuards(JwtAuthGuard)
+  async logout(
+    @Req() req: RequestWithUser,
+    @Body('refreshToken') refreshToken: string,
+  ) {
+    await this.authService.logout(req.user.userUuid, refreshToken);
+    return { message: '로그아웃 성공' };
   }
 }
