@@ -34,14 +34,12 @@ export class AuthController {
 
   @Post('register')
   async register(@Body() dto: SignupDto) {
-    console.log('dto:', dto);
     return this.authService.register(dto);
   }
 
   @Post('login')
   @HttpCode(200)
   async login(@Body() dto: LoginDto) {
-    console.log('dto:', dto);
     return this.authService.login(dto);
   }
 

@@ -12,10 +12,10 @@ export class UserService {
     });
   }
 
-  async updateNameByUuid(uuid: string, name: string) {
+  async updateNameByUuid(uuid: string, nickname: string) {
     return this.prisma.user.update({
       where: { uuid },
-      data: { name },
+      data: { nickname },
     });
   }
 
@@ -85,7 +85,7 @@ export class UserService {
     }));
 
     return {
-      nickname: user.name ?? '이름 없음',
+      nickname: user.nickname ?? '이름 없음',
       cash,
       stockValue,
       totalAsset,
@@ -124,5 +124,23 @@ export class UserService {
     }
 
     return user.id;
+  }
+  async searchUsers(query: string, currentUserUuid: string) {
+    return this.prisma.user.findMany({
+      where: {
+        nickname: {
+          contains: query,
+          mode: 'insensitive',
+        },
+        uuid: {
+          not: currentUserUuid, // ✅ 본인 제외
+        },
+      },
+      select: {
+        uuid: true,
+        nickname: true,
+      },
+      take: 10,
+    });
   }
 }

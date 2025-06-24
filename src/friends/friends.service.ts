@@ -94,7 +94,7 @@ export class FriendsService {
       where: { userId },
       include: {
         friend: {
-          select: { uuid: true, name: true },
+          select: { uuid: true, nickname: true },
         },
       },
     });
@@ -111,7 +111,7 @@ export class FriendsService {
         status: FriendRequestStatus.PENDING,
       },
       include: {
-        sender: { select: { uuid: true, name: true } },
+        sender: { select: { uuid: true, nickname: true } },
       },
     });
   }
@@ -125,7 +125,7 @@ export class FriendsService {
         status: FriendRequestStatus.PENDING,
       },
       include: {
-        receiver: { select: { uuid: true, name: true } },
+        receiver: { select: { uuid: true, nickname: true } },
       },
     });
   }

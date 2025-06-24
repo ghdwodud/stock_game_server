@@ -6,7 +6,7 @@ import { RequestWithUser } from 'src/auth/types/request-with-user';
 import { ApiBearerAuth } from '@nestjs/swagger';
 
 @Controller('friends')
-@ApiBearerAuth()
+@ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard)
 export class FriendsController {
   constructor(private readonly friendsService: FriendsService) {}

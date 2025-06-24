@@ -11,7 +11,7 @@ datasource db {
 model User {
   id           Int      @id @default(autoincrement())
   uuid         String   @unique @default(uuid())
-  name         String?
+  nickname     String?
   email        String?  @unique
   authProvider String // 'guest' | 'google' | 'apple'
   isGuest      Boolean  @default(false)

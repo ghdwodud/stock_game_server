@@ -51,7 +51,7 @@ export class AuthService {
       user = await this.prisma.user.create({
         data: {
           uuid: uuidv4(),
-          name: name ?? '구글 사용자',
+          nickname: name ?? '구글 사용자',
           email,
           authProvider: 'google',
           isGuest: false,
@@ -73,7 +73,7 @@ export class AuthService {
       refreshToken,
       user: {
         uuid: user.uuid,
-        name: user.name,
+        nickname: user.nickname,
         email: user.email,
       },
     };
@@ -130,7 +130,7 @@ export class AuthService {
   }
 
   async register(dto: SignupDto) {
-    const { email, name, password } = dto;
+    const { email, nickname, password } = dto;
 
     // 1. 이메일 중복 체크
     const existingUser = await this.prisma.user.findUnique({
@@ -147,7 +147,7 @@ export class AuthService {
     const user = await this.prisma.user.create({
       data: {
         email,
-        name,
+        nickname,
         password: hashed,
         authProvider: 'email',
         isGuest: false,
@@ -170,7 +170,7 @@ export class AuthService {
         id: user.id,
         uuid: user.uuid,
         email: user.email,
-        name: user.name,
+        nickname: user.nickname,
         authProvider: user.authProvider,
         isGuest: user.isGuest,
       },
@@ -202,7 +202,7 @@ export class AuthService {
         id: user.id,
         uuid: user.uuid,
         email: user.email,
-        name: user.name,
+        nickname: user.nickname,
         authProvider: user.authProvider,
         isGuest: user.isGuest,
       },
