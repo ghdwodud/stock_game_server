@@ -1,5 +1,13 @@
 // src/friends/friends.controller.ts
-import { Controller, Post, Param, UseGuards, Get, Req } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  Param,
+  UseGuards,
+  Get,
+  Req,
+  Delete,
+} from '@nestjs/common';
 import { FriendsService } from './friends.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RequestWithUser } from 'src/auth/types/request-with-user';
@@ -48,5 +56,13 @@ export class FriendsController {
   @Get('requests/outgoing')
   async getOutgoingRequests(@Req() req: RequestWithUser) {
     return this.friendsService.getOutgoingRequests(req.user.uuid);
+  }
+
+  @Delete(':uuid')
+  async deleteFriend(
+    @Param('uuid') friendUuid: string,
+    @Req() req: RequestWithUser,
+  ) {
+    return this.friendsService.deleteFriend(req.user.uuid, friendUuid);
   }
 }

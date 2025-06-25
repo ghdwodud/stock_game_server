@@ -111,7 +111,7 @@ export class FriendsService {
         status: FriendRequestStatus.PENDING,
       },
       include: {
-        sender: { select: { uuid: true, nickname: true } },
+        sender: { select: { uuid: true, nickname: true, avatarUrl: true } },
       },
     });
   }
@@ -125,7 +125,21 @@ export class FriendsService {
         status: FriendRequestStatus.PENDING,
       },
       include: {
-        receiver: { select: { uuid: true, nickname: true } },
+        receiver: { select: { uuid: true, nickname: true, avatarUrl: true } },
+      },
+    });
+  }
+
+  async deleteFriend(myUuid: string, friendUuid: string) {
+    const myId = await this.userService.getUserIdByUuid(myUuid);
+    const friendId = await this.userService.getUserIdByUuid(friendUuid);
+
+    return this.prisma.friend.deleteMany({
+      where: {
+        OR: [
+          { userId: myId, friendId },
+          { userId: friendId, friendId: myId },
+        ],
       },
     });
   }
