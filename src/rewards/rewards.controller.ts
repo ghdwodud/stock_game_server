@@ -35,7 +35,7 @@ export class RewardsController {
 
   @Post('watch-ad')
   async rewardWatchAd(@Req() req: RequestWithUser) {
-    const userId = req.user.userUuid;
+    const userId = req.user.uuid;
     await this.userService.incrementCash(userId, 10000);
     return { message: 'Reward granted' };
   }

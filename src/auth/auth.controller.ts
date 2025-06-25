@@ -50,7 +50,7 @@ export class AuthController {
     @Req() req: RequestWithUser,
     @Body('refreshToken') refreshToken: string,
   ) {
-    await this.authService.logout(req.user.userUuid, refreshToken);
+    await this.authService.logout(req.user.uuid, refreshToken);
     return { message: '로그아웃 성공' };
   }
 }

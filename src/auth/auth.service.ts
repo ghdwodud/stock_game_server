@@ -205,6 +205,7 @@ export class AuthService {
         nickname: user.nickname,
         authProvider: user.authProvider,
         isGuest: user.isGuest,
+        avatarUrl: user.avatarUrl,
       },
     };
   }

@@ -17,7 +17,7 @@ export class TransactionController {
   @ApiOperation({ summary: '주식 매수' })
   @ApiBody({ type: BuyStockDto })
   async buyStock(@Req() req: RequestWithUser, @Body() dto: BuyStockDto) {
-    return this.transactionService.buyStock(req.user.userUuid, dto);
+    return this.transactionService.buyStock(req.user.uuid, dto);
   }
 
   @Post('sell')
@@ -25,6 +25,6 @@ export class TransactionController {
   @ApiOperation({ summary: '주식 매도' })
   @ApiBody({ type: SellStockDto })
   async sellStock(@Req() req: RequestWithUser, @Body() dto: SellStockDto) {
-    return this.transactionService.sellStock(req.user.userUuid, dto);
+    return this.transactionService.sellStock(req.user.uuid, dto);
   }
 }

@@ -21,6 +21,6 @@ export class UserSearchController {
       return { message: '검색어가 필요합니다.' };
     }
 
-    return this.userService.searchUsers(query, req.user.userUuid);
+    return this.userService.searchUsers(query, req.user.uuid);
   }
 }

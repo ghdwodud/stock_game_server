@@ -32,24 +32,21 @@ export class FriendsController {
     @Param('uuid') receiverUuid: string,
     @Req() req: RequestWithUser,
   ) {
-    return this.friendsService.sendFriendRequest(
-      req.user.userUuid,
-      receiverUuid,
-    );
+    return this.friendsService.sendFriendRequest(req.user.uuid, receiverUuid);
   }
 
   @Get()
   async getFriends(@Req() req: RequestWithUser) {
-    return this.friendsService.getFriends(req.user.userUuid);
+    return this.friendsService.getFriends(req.user.uuid);
   }
 
   @Get('requests/incoming')
   async getIncomingRequests(@Req() req: RequestWithUser) {
-    return this.friendsService.getIncomingRequests(req.user.userUuid);
+    return this.friendsService.getIncomingRequests(req.user.uuid);
   }
 
   @Get('requests/outgoing')
   async getOutgoingRequests(@Req() req: RequestWithUser) {
-    return this.friendsService.getOutgoingRequests(req.user.userUuid);
+    return this.friendsService.getOutgoingRequests(req.user.uuid);
   }
 }

@@ -4,6 +4,12 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class UserService {
+  async updateAvatar(uuid: string, avatarUrl: string) {
+    return this.prisma.user.update({
+      where: { uuid },
+      data: { avatarUrl },
+    });
+  }
   constructor(private readonly prisma: PrismaService) {}
 
   async findByUuid(uuid: string) {
@@ -114,6 +120,7 @@ export class UserService {
     });
   }
   async getUserIdByUuid(uuid: string): Promise<number> {
+    console.log('getUserIdByUuid uuid:', uuid);
     const user = await this.prisma.user.findUnique({
       where: { uuid },
       select: { id: true },
@@ -133,12 +140,13 @@ export class UserService {
           mode: 'insensitive',
         },
         uuid: {
-          not: currentUserUuid, // ✅ 본인 제외
+          not: currentUserUuid,
         },
       },
       select: {
         uuid: true,
         nickname: true,
+        avatarUrl: true,
       },
       take: 10,
     });

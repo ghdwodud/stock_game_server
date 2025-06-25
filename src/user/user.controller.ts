@@ -6,6 +6,9 @@ import {
   Param,
   Patch,
   UseGuards,
+  UseInterceptors,
+  UploadedFile,
+  Req,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -13,9 +16,14 @@ import {
   ApiBody,
   ApiParam,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { extname } from 'path';
+import { Express } from 'express';
+import { diskStorage } from 'multer';
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
@@ -65,5 +73,41 @@ export class UserController {
     @Body() body: { name: string },
   ) {
     return this.userService.updateNameByUuid(uuid, body.name);
+  }
+
+  @Post('avatar')
+  @UseInterceptors(
+    FileInterceptor('avatar', {
+      storage: diskStorage({
+        destination: './uploads/avatars',
+        filename: (req, file, cb) => {
+          const ext = extname(file.originalname);
+          const uniqueName = `${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
+          cb(null, uniqueName);
+        },
+      }),
+    }),
+  )
+  @ApiOperation({ summary: '아바타 이미지 업로드' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        avatar: {
+          type: 'string',
+          format: 'binary',
+        },
+      },
+    },
+  })
+  async uploadAvatar(
+    @UploadedFile() file: Express.Multer.File,
+    @Req() req: any,
+  ) {
+    const uuid = req.user.uuid;
+    const avatarUrl = `/uploads/avatars/${file.filename}`;
+    await this.userService.updateAvatar(uuid, avatarUrl);
+    return { avatarUrl };
   }
 }

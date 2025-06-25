@@ -17,6 +17,6 @@
     "noImplicitAny": false,
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
-    "types": ["@prisma/client"]   // ✅ 추가
+    "types": ["node", "express", "@prisma/client"]
   }
 }

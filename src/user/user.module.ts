@@ -7,7 +7,7 @@ import { UserSearchController } from './user.search.controller';
 
 @Module({
   imports: [PrismaModule],
-  controllers: [UserSearchController, UserController],
+  controllers: [UserController, UserSearchController],
   providers: [UserService, PrismaService],
   exports: [UserService],
 })
