@@ -10,9 +10,7 @@ import { Req } from '@nestjs/common';
 @UseGuards(JwtAuthGuard)
 @Controller('search')
 export class UserSearchController {
-  constructor(private readonly userService: UserService) {
-    console.log('🟢 UserSearchController initialized');
-  }
+  constructor(private readonly userService: UserService) {}
 
   @Get('')
   @ApiQuery({ name: 'q', required: false, description: '닉네임 검색어' })

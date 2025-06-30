@@ -12,6 +12,7 @@ import { JwtModule } from '@nestjs/jwt';
 import { FirebaseModule } from './firebase/firebase.module';
 import { TransactionModule } from './transaction/transaction.module';
 import { FriendsModule } from './friends/friends.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -34,6 +35,7 @@ import { FriendsModule } from './friends/friends.module';
     JwtModule,
     TransactionModule,
     FriendsModule,
+    ChatModule,
   ],
   controllers: [],
   providers: [],

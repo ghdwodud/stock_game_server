@@ -29,6 +29,7 @@ model User {
   receivedFriendRequests FriendRequest[]   @relation("ReceivedFriendRequests")
   userFriends            Friend[]          @relation("UserFriends")
   friendUsers            Friend[]          @relation("FriendUsers")
+  chatRoomMembers        ChatRoomMember[]
 }
 
 model Stock {
@@ -131,4 +132,34 @@ model Friend {
 
   user   User @relation("UserFriends", fields: [userId], references: [id])
   friend User @relation("FriendUsers", fields: [friendId], references: [id])
+}
+
+model ChatRoom {
+  id        String   @id @default(uuid())
+  name      String?
+  createdAt DateTime @default(now())
+
+  messages ChatMessage[]
+  members  ChatRoomMember[]
+}
+
+model ChatMessage {
+  id        String   @id @default(uuid())
+  roomId    String
+  senderId  String
+  text      String
+  createdAt DateTime @default(now())
+
+  room ChatRoom @relation(fields: [roomId], references: [id])
+}
+
+model ChatRoomMember {
+  id     String @id @default(uuid())
+  roomId String
+  userId String
+
+  room ChatRoom @relation(fields: [roomId], references: [id])
+  user User     @relation(fields: [userId], references: [uuid])
+
+  @@unique([roomId, userId])
 }

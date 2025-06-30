@@ -120,7 +120,6 @@ export class UserService {
     });
   }
   async getUserIdByUuid(uuid: string): Promise<number> {
-    console.log('getUserIdByUuid uuid:', uuid);
     const user = await this.prisma.user.findUnique({
       where: { uuid },
       select: { id: true },
