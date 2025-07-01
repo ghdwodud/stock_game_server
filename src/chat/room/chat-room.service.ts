@@ -1,10 +1,17 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-
+import { UserService } from 'src/user/user.service';
 @Injectable()
 export class ChatRoomService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly userService: UserService,
+  ) {}
 
   async createRoom(dto: CreateRoomDto) {
     console.log('📥 [createRoom] 호출됨 - dto:', dto);
@@ -77,5 +84,32 @@ export class ChatRoomService {
     });
 
     return rooms;
+  }
+
+  async deleteRoom(roomId: string, userUuid: string) {
+    const isMember = await this.prisma.chatRoomMember.findFirst({
+      where: {
+        roomId,
+        userId: userUuid,
+      },
+    });
+
+    if (!isMember) {
+      throw new ForbiddenException('이 채팅방에 대한 삭제 권한이 없습니다.');
+    }
+
+    await this.prisma.chatMessage.deleteMany({
+      where: { roomId },
+    });
+
+    await this.prisma.chatRoomMember.deleteMany({
+      where: { roomId },
+    });
+
+    await this.prisma.chatRoom.delete({
+      where: { id: roomId },
+    });
+
+    return { success: true };
   }
 }

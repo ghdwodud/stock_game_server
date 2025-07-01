@@ -1,7 +1,21 @@
-import { Controller, Get, Post, Body, Query } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Delete,
+  Param,
+  Body,
+  Query,
+} from '@nestjs/common';
 import { ChatRoomService } from './chat-room.service';
 import { CreateRoomDto } from './dto/create-room.dto';
-import { ApiTags, ApiOperation, ApiQuery, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiQuery,
+  ApiBody,
+  ApiParam,
+} from '@nestjs/swagger';
 
 @ApiTags('Chatroom')
 @Controller('chatroom')
@@ -20,5 +34,15 @@ export class ChatRoomController {
   @ApiQuery({ name: 'userUuid', type: String })
   async getMyChatRooms(@Query('userUuid') userUuid: string) {
     return this.chatRoomService.getRoomsByUserUuid(userUuid);
+  }
+
+  @Delete(':roomId')
+  @ApiOperation({ summary: '채팅방 삭제' })
+  @ApiQuery({ name: 'userUuid', type: String })
+  async deleteRoom(
+    @Param('roomId') roomId: string,
+    @Query('userUuid') userUuid: string,
+  ) {
+    return this.chatRoomService.deleteRoom(roomId, userUuid);
   }
 }
