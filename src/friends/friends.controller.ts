@@ -20,18 +20,12 @@ export class FriendsController {
   constructor(private readonly friendsService: FriendsService) {}
 
   @Post('request/:id/accept')
-  async acceptRequest(
-    @Param('id') requestId: string,
-    @Req() req: RequestWithUser,
-  ) {
+  async acceptRequest(@Param('id') requestId: string) {
     return this.friendsService.acceptFriendRequest(requestId);
   }
 
   @Post('request/:id/reject')
-  async rejectRequest(
-    @Param('id') requestId: string,
-    @Req() req: RequestWithUser,
-  ) {
+  async rejectRequest(@Param('id') requestId: string) {
     return this.friendsService.rejectFriendRequest(requestId); // ✅ 수정
   }
 

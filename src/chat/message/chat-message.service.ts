@@ -27,11 +27,21 @@ export class ChatMessageService {
   }
 
   async saveMessage(dto: SendMessageDto) {
+    const { senderId, roomId, text } = dto;
+
+    if (!roomId) {
+      throw new Error('roomId가 누락되었습니다.');
+    }
+
+    if (!senderId) {
+      throw new Error('senderId가 누락되었습니다.');
+    }
+
     return this.prisma.chatMessage.create({
       data: {
-        senderId: dto.senderId,
-        roomId: dto.roomId,
-        text: dto.text,
+        senderId,
+        roomId,
+        text,
       },
     });
   }
