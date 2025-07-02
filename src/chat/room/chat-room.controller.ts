@@ -9,13 +9,7 @@ import {
 } from '@nestjs/common';
 import { ChatRoomService } from './chat-room.service';
 import { CreateRoomDto } from './dto/create-room.dto';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiQuery,
-  ApiBody,
-  ApiParam,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiQuery, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Chatroom')
 @Controller('chatroom')

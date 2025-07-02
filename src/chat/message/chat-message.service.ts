@@ -56,4 +56,11 @@ export class ChatMessageService {
       .map((member) => this.getSocketIdByUser(member.userId))
       .filter((id): id is string => Boolean(id)); // undefined 제거
   }
+
+  async getMessagesByRoomId(roomId: string) {
+    return this.prisma.chatMessage.findMany({
+      where: { roomId },
+      orderBy: { createdAt: 'asc' }, // 오래된 순으로 정렬
+    });
+  }
 }
