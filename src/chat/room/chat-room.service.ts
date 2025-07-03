@@ -76,6 +76,10 @@ export class ChatRoomService {
         messages: {
           orderBy: { createdAt: 'desc' },
           take: 1,
+          select: {
+            text: true,
+            createdAt: true,
+          },
         },
       },
       orderBy: {
@@ -83,7 +87,11 @@ export class ChatRoomService {
       },
     });
 
-    return rooms;
+    return rooms.map((room) => ({
+      ...room,
+      lastMessage: room.messages[0]?.text ?? '',
+      lastMessageTime: room.messages[0]?.createdAt ?? null,
+    }));
   }
 
   async deleteRoom(roomId: string, userUuid: string) {
