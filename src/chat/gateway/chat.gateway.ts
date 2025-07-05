@@ -6,13 +6,17 @@ import {
   MessageBody,
   ConnectedSocket,
 } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
+import { Socket, Server } from 'socket.io';
 import { ChatMessageService } from '../message/chat-message.service';
 import { SendMessageDto } from '../message/dto/send-message.dto';
+import { WebSocketServer } from '@nestjs/websockets';
 
 @WebSocketGateway({ cors: true })
 export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
   constructor(private readonly chatService: ChatMessageService) {}
+
+  @WebSocketServer()
+  server: Server;
 
   handleConnection(socket: Socket) {
     console.log(`✅ ${socket.id} connected`);
@@ -22,22 +26,20 @@ export class ChatGateway implements OnGatewayConnection, OnGatewayDisconnect {
     console.log(`❌ ${socket.id} disconnected`);
   }
 
-  @SubscribeMessage('send_message')
-  async handleSendMessage(
-    @MessageBody() data: SendMessageDto,
+  // ✅ 클라이언트가 방 참가 요청 시
+  @SubscribeMessage('join')
+  handleJoinRoom(
+    @MessageBody() data: { roomId: string },
     @ConnectedSocket() socket: Socket,
   ) {
+    socket.join(data.roomId);
+    console.log(`📥 ${socket.id} joined room ${data.roomId}`);
+  }
+
+  // ✅ 메시지 전송 → 해당 room 전체에 broadcast
+  @SubscribeMessage('send_message')
+  async handleSendMessage(@MessageBody() data: SendMessageDto) {
     const saved = await this.chatService.saveMessage(data);
-
-    // 1. 해당 roomId의 멤버 목록 조회
-    const members = await this.chatService.getRoomMemberSocketIds(data.roomId);
-
-    // 2. 각 멤버의 socketId로 메시지 전송
-    for (const socketId of members) {
-      socket.to(socketId).emit('receive_message', saved);
-    }
-
-    // 3. 보낸 사람에게도 다시 emit (자기 메시지 띄우기)
-    socket.emit('receive_message', saved);
+    this.server.to(data.roomId).emit('receive_message', saved);
   }
 }
