@@ -1,37 +1,38 @@
-## 배포 구성
+## 🚀 배포 구성
 
-운영 환경을 고려해 도메인 연결, HTTPS 인증서, 자동화 배포 구조 등을 포함한  
-기본적인 인프라 구성을 직접 진행했습니다.
+NestJS 기반 백엔드 서버는 AWS EC2와 RDS를 사용해 배포하였으며,  
+Cloudflare를 통한 HTTPS 인증 및 GitHub Actions 기반 자동화 배포 파이프라인을 구성했습니다.
 
 ---
 
 ### 🔧 인프라 구성 요약
 
-| 구성 요소 | 사용 기술 |
-|-----------|-----------|
-| 서버 | AWS EC2 (Ubuntu) |
-| DB | AWS RDS (PostgreSQL) |
-| 배포 자동화 | GitHub Actions + S3 + cron |
-| 도메인 | Cloudflare |
-| 리버스 프록시 | Nginx |
-| 프로세스 관리 | PM2 |
-| 인증서 | Cloudflare Full SSL |
+| 구성 요소        | 사용 기술                     |
+|------------------|-------------------------------|
+| 서버             | AWS EC2 (Ubuntu)              |
+| 데이터베이스     | AWS RDS (PostgreSQL)          |
+| 자동 배포        | GitHub Actions + S3 + cronjob |
+| 도메인 및 DNS    | Cloudflare                    |
+| 리버스 프록시    | Nginx                         |
+| 프로세스 관리    | PM2                           |
+| HTTPS 인증서     | Cloudflare Full SSL           |
 
 ---
 
 ### 🌐 도메인 및 HTTPS 구성
 
-- 도메인: `https://stockgame.cc`
+- 도메인: [`https://stockgame.cc`](https://stockgame.cc)
 - Cloudflare를 통해 도메인 구매 및 DNS 설정
-- SSL 인증은 Cloudflare Full SSL 모드 사용
+- SSL 인증은 Cloudflare Full SSL 모드를 사용하여 설정
 
 ---
 
 ### 🔁 리버스 프록시 (Nginx)
 
-- 외부 요청은 Nginx가 80/443 포트에서 받아 내부 NestJS 서버로 전달
-- SSL 종료(SSL termination)도 Nginx에서 수행
-- 예시 설정:
+- 외부 요청은 Nginx가 80/443 포트에서 수신하고 내부 NestJS 서버(`localhost:3000`)로 프록시
+- SSL Termination은 Nginx에서 처리
+
+**예시 설정:**
 
 ```nginx
 server {
