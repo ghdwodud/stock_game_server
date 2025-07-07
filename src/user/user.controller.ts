@@ -21,9 +21,21 @@ import {
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { extname } from 'path';
-import { Express } from 'express';
+import { Express, Request } from 'express';
 import { diskStorage } from 'multer';
+import { promisify } from 'util';
+import * as fs from 'fs';
+import * as path from 'path';
+import { extname } from 'path';
+
+// 사용자 정의 Request 타입: req.user.uuid 사용 시 오류 방지
+interface RequestWithUser extends Request {
+  user: {
+    uuid: string;
+  };
+}
+
+const unlinkAsync = promisify(fs.unlink);
 
 @UseGuards(JwtAuthGuard)
 @ApiBearerAuth('access-token')
@@ -103,11 +115,33 @@ export class UserController {
   })
   async uploadAvatar(
     @UploadedFile() file: Express.Multer.File,
-    @Req() req: any,
+    @Req() req: RequestWithUser,
   ) {
     const uuid = req.user.uuid;
-    const avatarUrl = `/uploads/avatars/${file.filename}`;
-    await this.userService.updateAvatar(uuid, avatarUrl);
-    return { avatarUrl };
+
+    // 새 아바타 경로
+    const relativePath = `/uploads/avatars/${file.filename}`;
+    const fullUrl = `${req.protocol}://${req.get('host')}${relativePath}`;
+
+    // 기존 아바타 URL 조회
+    const user = await this.userService.findByUuid(uuid);
+    const oldAvatarUrl = user?.avatarUrl;
+
+    // DB에 새 아바타 URL 먼저 저장
+    await this.userService.updateAvatar(uuid, fullUrl);
+
+    // 기존 아바타가 내부 저장소 이미지라면 삭제
+    if (oldAvatarUrl && oldAvatarUrl.includes('/uploads/avatars/')) {
+      const filename = oldAvatarUrl.split('/uploads/avatars/')[1];
+      const oldPath = path.join(process.cwd(), 'uploads', 'avatars', filename); // ✅ 변경된 부분
+
+      unlinkAsync(oldPath)
+        .then(() => console.log(`✅ 기존 아바타 삭제됨: ${filename}`))
+        .catch((err: Error) =>
+          console.warn(`⚠️ 기존 아바타 삭제 실패: ${err.message}`),
+        );
+    }
+
+    return { avatarUrl: fullUrl };
   }
 }
