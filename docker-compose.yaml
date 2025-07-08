@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  server:
+    build: .
+    container_name: stockgame-server
+    env_file: .env
+    # (선택) 아래 포트는 로컬 테스트용, nginx만 쓰면 생략 가능
+    # ports:
+    #   - "3000:3000"
+    depends_on:
+      - db
+    networks:
+      - backend
+    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+
+  db:
+    image: postgres:15
+    container_name: stockgame-db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: stockgame-db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - backend
+
+  nginx:
+    image: nginx:stable
+    container_name: stockgame-nginx
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - server
+    networks:
+      - backend
+
+volumes:
+  pgdata:
+
+networks:
+  backend:
