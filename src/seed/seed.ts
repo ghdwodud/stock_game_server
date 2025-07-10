@@ -1,6 +1,7 @@
 import { PrismaClient, User } from '@prisma/client';
 import { faker } from '@faker-js/faker';
 import bcrypt from 'bcrypt';
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -18,25 +19,24 @@ async function main() {
 
   // 🟩 유저 100명 생성
   const users: User[] = [];
+
   for (let i = 0; i < 100; i++) {
-    const bcrypt = require('bcrypt');
     const password = 'test1234';
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword: string = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
       data: {
-        nickname: faker.internet.username(),
+        nickname: faker.internet.userName(),
         email: faker.internet.email(),
         avatarUrl: faker.image.avatar(),
         authProvider: 'email',
-        password: hashedPassword, // ✅ 여기!
+        password: hashedPassword,
         isGuest: false,
       },
     });
 
     users.push(user);
 
-    // 지갑 생성
     await prisma.wallet.create({
       data: {
         userId: user.id,
@@ -45,7 +45,7 @@ async function main() {
     });
   }
 
-  // 🟦 종목 생성 (중복 방지 처리)
+  // 🟦 종목 생성
   const existingStocks = await prisma.stock.findMany();
   if (existingStocks.length === 0) {
     await prisma.stock.createMany({
@@ -59,7 +59,7 @@ async function main() {
 
   const stocks = await prisma.stock.findMany();
 
-  // 🟧 종목별 가격 히스토리 10개씩 생성
+  // 🟧 가격 히스토리 생성
   for (const stock of stocks) {
     await prisma.stockHistory.createMany({
       data: Array.from({ length: 10 }, (_, i) => ({
@@ -70,7 +70,7 @@ async function main() {
     });
   }
 
-  // 🟨 일부 유저 주식 보유 (Holding)
+  // 🟨 유저 보유 주식
   for (const user of users.slice(0, 50)) {
     const holdings = stocks.map((stock) => ({
       userId: user.id,
@@ -78,10 +78,11 @@ async function main() {
       quantity: Math.floor(Math.random() * 10) + 1,
       avgBuyPrice: stock.price,
     }));
+
     await prisma.holding.createMany({ data: holdings });
   }
 
-  // 🟥 거래 기록 (UserTransaction)
+  // 🟥 거래 기록
   for (const user of users.slice(0, 30)) {
     for (const stock of stocks) {
       const quantity = Math.floor(Math.random() * 5) + 1;
@@ -101,7 +102,7 @@ async function main() {
     }
   }
 
-  // 🟦 친구 관계 생성
+  // 🟦 친구 관계
   for (let i = 0; i < 50; i++) {
     const userA = users[i];
     const userB = users[i + 1];
@@ -115,7 +116,7 @@ async function main() {
     }
   }
 
-  // 🟪 친구 요청 생성
+  // 🟪 친구 요청
   for (let i = 0; i < 20; i++) {
     const sender = users[i];
     const receiver = users[i + 2];
@@ -137,4 +138,6 @@ main()
   .catch((e) => {
     console.error('🚨 Seed 실패:', e);
   })
-  .finally(() => prisma.$disconnect());
+  .finally(() => {
+    void prisma.$disconnect();
+  });
