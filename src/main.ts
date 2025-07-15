@@ -35,6 +35,8 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
   app.use('/uploads', express.static(join(__dirname, '../..', 'uploads')));
 
-  await app.listen(3000);
+  const port = process.env.PORT || 3000;
+  const host = process.env.HOST || '0.0.0.0';
+  await app.listen(port, host);
 }
 bootstrap();

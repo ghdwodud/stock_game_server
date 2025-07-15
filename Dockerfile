@@ -17,11 +17,14 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/tsconfig.json ./
+COPY --from=builder /app/.env ./
 
 # ⚠ Prisma Client 복사
 COPY --from=builder /app/node_modules/.prisma /app/node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma /app/node_modules/@prisma
+COPY --from=builder /app/node_modules/@prisma/client /app/node_modules/@prisma/client 
 
-RUN npm install --omit=dev
+RUN npm install 
 
 CMD ["sh", "-c", "npx prisma migrate deploy && node dist/main.js"]

@@ -6,13 +6,13 @@ services:
     container_name: stockgame-server
     env_file: .env
     # (선택) 아래 포트는 로컬 테스트용, nginx만 쓰면 생략 가능
-    # ports:
-    #   - "3000:3000"
+    ports:
+      - "3000:3000"
     depends_on:
       - db
     networks:
       - backend
-    command: sh -c "npx prisma migrate deploy && node dist/main.js"
+    command: sh -c "npm run build && npx prisma migrate deploy && node dist/main.js"
 
   db:
     image: postgres:15
